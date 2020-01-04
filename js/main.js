@@ -1,9 +1,9 @@
-
 const $ = _ => document.querySelector(_)
 
 const $c = _ => document.createElement(_)
 
-let canvas, bg, fg, cf, ntiles, tileWidth, tileHeight, map, tools, tool, activeTool, isPlacing
+let canvas, bg, fg, cf, tileWidth, tileHeight, map, tools, tool, activeTool, isPlacing
+
 
 /* texture from https://opengameart.org/content/isometric-landscape */
 const texture = new Image()
@@ -14,10 +14,8 @@ const init = () => {
 
 	tool = [0,0]
 	
-	ntiles = 7;
-	map = createMap( ntiles );
-
-
+	map = newMap(7);
+	
 	canvas = $("#bg")
 	canvas.width = 910
 	canvas.height = 666
@@ -85,9 +83,9 @@ function createMap( n ){
 
 const updateHashState = () => {
 	let c = 0
-	const u8 = new Uint8Array(ntiles*ntiles)
-	for(let i = 0; i < ntiles; i++){
-		for(let j = 0; j < ntiles; j++){
+	const u8 = new Uint8Array(map.size())
+	for(let i = 0; i < map.size(); i++){
+		for(let j = 0; j < map.size(); j++){
 			u8[c++] = map[i][j][0]*texWidth + map[i][j][1]
 		}
 	}
@@ -98,8 +96,8 @@ const updateHashState = () => {
 const loadHashState = state => {
 	const u8 = FromBase64(state)
 	let c = 0
-	for(let i = 0; i < ntiles; i++) {
-		for(let j = 0; j < ntiles; j++) {
+	for(let i = 0; i < map.size(); i++) {
+		for(let j = 0; j < map.size(); j++) {
 			const t = u8[c++] || 0
 			const x = Math.trunc(t / texWidth)
 			const y = Math.trunc(t % texWidth)
@@ -110,7 +108,7 @@ const loadHashState = state => {
 
 const click = e => {
 	const pos = getPosition(e)
-	if (pos.x >= 0 && pos.x < ntiles && pos.y >= 0 && pos.y < ntiles) {
+	if (pos.x >= 0 && pos.x < map.size() && pos.y >= 0 && pos.y < map.size()) {
 		
 		map[pos.x][pos.y][0] = (e.which === 3) ? 0 : tool[0]
 		map[pos.x][pos.y][1] = (e.which === 3) ? 0 : tool[1]
@@ -129,8 +127,8 @@ const unclick = () => {
 
 const drawMap = () =>{
 	bg.clearRect(-w,-h,w*2,h*2)
-	for(let i = 0; i < ntiles; i++){
-		for(let j = 0; j < ntiles; j++){
+	for(let i = 0; i < map.size(); i++){
+		for(let j = 0; j < map.size(); j++){
 			drawImageTile(bg,i,j,map[i][j][0],map[i][j][1])
 		}
 	}
@@ -161,17 +159,29 @@ const drawImageTile = (c,x,y,i,j) => {
 
 const getPosition = e => {
 	const _y =  (e.offsetY - tileHeight * 2) / tileHeight,
-				_x =  e.offsetX / tileWidth - ntiles / 2
+				_x =  e.offsetX / tileWidth - map.size() / 2
 	x = Math.floor(_y-_x)
 	y = Math.floor(_x+_y)
 	return {x,y}
 }
 
-const viz = (e) =>{
+function newMap( n ){
+	map = Array(n).fill( Array(n).fill( 0 ))
+			  .map( i => i.map( j => [0,0] ));
+
+	map.size = _ => map.length;
+	
+	// map.saveHash = _ => _;
+	// map.loadHash = _ => _;
+	
+	return map;
+}
+
+const viz = (e) => {
 	if (isPlacing)
 		click(e)
 	const pos = getPosition(e)
 	cf.clearRect(-w,-h,w*2,h*2)
-	if( pos.x >= 0 && pos.x < ntiles && pos.y >= 0 && pos.y < ntiles)
+	if( pos.x >= 0 && pos.x < map.size() && pos.y >= 0 && pos.y < map.size())
 		drawTile(cf,pos.x,pos.y,'rgba(0,0,0,0.2)')
 }

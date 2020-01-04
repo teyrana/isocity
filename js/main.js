@@ -13,16 +13,10 @@ texture.onload = _ => init()
 const init = () => {
 
 	tool = [0,0]
+	
+	ntiles = 7;
+	map = createMap( ntiles );
 
-	map = [
-		[[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]],
-		[[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]],
-		[[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]],
-		[[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]],
-		[[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]],
-		[[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]],
-		[[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]]
-	]
 
 	canvas = $("#bg")
 	canvas.width = 910
@@ -32,7 +26,6 @@ const init = () => {
 	texWidth = 12
 	texHeight = 6
 	bg = canvas.getContext("2d")
-	ntiles = 7
 	tileWidth = 128
 	tileHeight = 64
 	bg.translate(w/2,tileHeight*2)
@@ -83,6 +76,11 @@ const ToBase64 = u8 => {
 
 const FromBase64 = str => {
 	return atob(str).split('').map( c => c.charCodeAt(0) )
+}
+
+function createMap( n ){
+	return Array(n).fill( Array(n).fill( 0 ))
+			  .map( i => i.map( j => [0,0] ));
 }
 
 const updateHashState = () => {

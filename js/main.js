@@ -2,7 +2,7 @@ const $ = _ => document.querySelector(_)
 
 const $c = _ => document.createElement(_)
 
-let canvas, bg, fg, cf, tileWidth, tileHeight, map, tools, tool, activeTool, isPlacing
+let canvas, bg, fg, cf, tileWidth, tileHeight, tools, tool, activeTool, isPlacing
 
 
 /* texture from https://opengameart.org/content/isometric-landscape */
@@ -14,7 +14,7 @@ const init = () => {
 
 	tool = [0,0]
 	
-	map = newMap(7);
+	let map = newMap(7);
 	
 	canvas = $("#bg")
 	canvas.width = 910
@@ -28,9 +28,9 @@ const init = () => {
 	tileHeight = 64
 	bg.translate(w/2,tileHeight*2)
 
-	loadHashState(document.location.hash.substring(1))
+	map.loadHash(document.location.hash.substring(1));
 
-	drawMap()
+	drawMap(map, canvas);
 
 	fg = $('#fg')
 	fg.width = canvas.width
@@ -40,9 +40,9 @@ const init = () => {
 	fg.addEventListener('mousemove', viz)
 	fg.addEventListener('contextmenu', e => e.preventDefault())
 	fg.addEventListener('mouseup', unclick)
-	fg.addEventListener('mousedown', click)
-	fg.addEventListener('touchend', click)
-	fg.addEventListener('pointerup', click)
+	fg.addEventListener('mousedown', e => {click(map, e);} );
+	fg.addEventListener('touchend', e => {click(map, e);} );
+	fg.addEventListener('pointerup', e => {click(map, e);} );
 
 	tools = $('#tools')
 
@@ -81,43 +81,21 @@ function createMap( n ){
 			  .map( i => i.map( j => [0,0] ));
 }
 
-const updateHashState = () => {
-	let c = 0
-	const u8 = new Uint8Array(map.size())
-	for(let i = 0; i < map.size(); i++){
-		for(let j = 0; j < map.size(); j++){
-			u8[c++] = map[i][j][0]*texWidth + map[i][j][1]
-		}
-	}
-	const state = ToBase64(u8)
-	history.replaceState(undefined, undefined, `#${state}`)
-}
+const click = (map, event) => {
+	const pos = getPosition(event);
 
-const loadHashState = state => {
-	const u8 = FromBase64(state)
-	let c = 0
-	for(let i = 0; i < map.size(); i++) {
-		for(let j = 0; j < map.size(); j++) {
-			const t = u8[c++] || 0
-			const x = Math.trunc(t / texWidth)
-			const y = Math.trunc(t % texWidth)
-			map[i][j] = [x,y]
-		}
-	}
-}
-
-const click = e => {
-	const pos = getPosition(e)
-	if (pos.x >= 0 && pos.x < map.size() && pos.y >= 0 && pos.y < map.size()) {
+    if (pos.x >= 0 && pos.x < map.size() && pos.y >= 0 && pos.y < map.size()) {
 		
-		map[pos.x][pos.y][0] = (e.which === 3) ? 0 : tool[0]
-		map[pos.x][pos.y][1] = (e.which === 3) ? 0 : tool[1]
+		map[pos.x][pos.y][0] = (event.which === 3) ? 0 : tool[0]
+		map[pos.x][pos.y][1] = (event.which === 3) ? 0 : tool[1]
 		isPlacing = true
 
 		drawMap()
 		cf.clearRect(-w, -h, w * 2, h * 2)
 	}
-	updateHashState();
+	
+	const hash = map.saveHash();
+	history.replaceState(undefined, undefined, `#${hash}`);	
 }
 
 const unclick = () => {
@@ -165,15 +143,47 @@ const getPosition = e => {
 	return {x,y}
 }
 
+// ====== ====== ====== ====== Map Module ====== ====== ====== ======
+// ==================================================================
 function newMap( n ){
 	map = Array(n).fill( Array(n).fill( 0 ))
 			  .map( i => i.map( j => [0,0] ));
 
 	map.size = _ => map.length;
 	
-	// map.saveHash = _ => _;
-	// map.loadHash = _ => _;
-	
+	// From https://stackoverflow.com/a/36046727
+	map._ToBase64 = function(u8){
+		return btoa(String.fromCharCode.apply(null, u8))
+	}
+
+	map._FromBase64 = function(str){
+		return atob(str).split('').map( c => c.charCodeAt(0) )
+	}
+
+	map.saveHash = function() {
+		let c = 0
+		const u8 = new Uint8Array(map.size());
+		for(let i = 0; i < map.size(); i++){
+			for(let j = 0; j < map.size(); j++){
+				u8[c++] = map[i][j][0]*texWidth + map[i][j][1]
+			}
+		}
+		return this._ToBase64(u8);
+	}
+
+	map.loadHash = function(state) {
+		let u8 = this._FromBase64(state)
+		let c = 0
+		for(let i = 0; i < map.size(); i++) {
+			for(let j = 0; j < map.size(); j++) {
+				const t = u8[c++] || 0
+				const x = Math.trunc(t / texWidth)
+				const y = Math.trunc(t % texWidth)
+				map[i][j] = [x,y]
+			}
+		}
+	}
+
 	return map;
 }
 

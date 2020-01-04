@@ -1,197 +1,306 @@
+"use strict"
+
 const $ = _ => document.querySelector(_)
 
 const $c = _ => document.createElement(_)
 
-let canvas, bg, fg, cf, tileWidth, tileHeight, tools, tool, activeTool, isPlacing
+let activeToolDiv, activeTexId=0, isPlacing=false;
 
+function click( canvas, map, event ){
 
-/* texture from https://opengameart.org/content/isometric-landscape */
-const texture = new Image()
-texture.src = "textures/01_130x66_130x230.png"
-texture.onload = _ => init()
+    const {i,j} = getTileIndex( canvas, event.offsetX, event.offsetY);
+    
+    if( 0 > activeTexId ){
+        return;
+    }
 
-const init = () => {
-
-	tool = [0,0]
-	
-	let map = newMap(7);
-	
-	canvas = $("#bg")
-	canvas.width = 910
-	canvas.height = 666
-	w = 910
-	h = 462
-	texWidth = 12
-	texHeight = 6
-	bg = canvas.getContext("2d")
-	tileWidth = 128
-	tileHeight = 64
-	bg.translate(w/2,tileHeight*2)
-
-	map.loadHash(document.location.hash.substring(1));
-
-	drawMap(map, canvas);
-
-	fg = $('#fg')
-	fg.width = canvas.width
-	fg.height = canvas.height
-	cf = fg.getContext('2d')
-	cf.translate(w/2,tileHeight*2)
-	fg.addEventListener('mousemove', viz)
-	fg.addEventListener('contextmenu', e => e.preventDefault())
-	fg.addEventListener('mouseup', unclick)
-	fg.addEventListener('mousedown', e => {click(map, e);} );
-	fg.addEventListener('touchend', e => {click(map, e);} );
-	fg.addEventListener('pointerup', e => {click(map, e);} );
-
-	tools = $('#tools')
-
-	let toolCount = 0
-	for(let i = 0; i < texHeight; i++){
-		for(let j = 0; j < texWidth; j++){
-			const div = $c('div');
-			div.id = `tool_${toolCount++}`
-			div.style.display = "block"
-			/* width of 132 instead of 130  = 130 image + 2 border = 132 */
-			div.style.backgroundPosition = `-${j*130+2}px -${i*230}px`
-			div.addEventListener('click', e => {
-				tool = [i,j]
-				if (activeTool)
-					$(`#${activeTool}`).classList.remove('selected')
-				activeTool = e.target.id
-				$(`#${activeTool}`).classList.add('selected')
-			})
-			tools.appendChild( div )
-		}
-	}
-
+    if( (0 <= i && i < map.size()) && ( 0 <= j && j < map.size()) ){
+        if( 3 === event.which ){
+            map.tiles[i][j].texture_id = 0;
+        }else{
+            map.tiles[i][j].texture_id = activeTexId;
+        }
+        
+        isPlacing = true
+        drawMap(canvas, map);
+    }
+    
+    const hash = map.save();
+    // map.load(document.location.hash.substring(1));
+    history.replaceState(undefined, undefined, `#${hash}`); 
+    
 }
 
-// From https://stackoverflow.com/a/36046727
-const ToBase64 = u8 => {
-	return btoa(String.fromCharCode.apply(null, u8))
+function unclick(e){
+    if (isPlacing)
+        isPlacing = false    
 }
 
-const FromBase64 = str => {
-	return atob(str).split('').map( c => c.charCodeAt(0) )
+// converts canvas coordinates => tile coordinates
+function getTileIndex(canvas, x, y){
+    // translate to map origin 0,0
+    x = x - canvas.width/2;
+    y = y - 130; // yes, it's a magic number.
+                 // I dislike it, but I don't understand the logic for it....
+
+    x =  x / TileBase.width;
+    y =  y / TileBase.height;
+
+    // the i-axis  goes from northeast to southwest
+    const i = Math.floor( y - x );
+    
+    // the j-axis  goes from northwest to southeast
+    const j = Math.floor( x + y );
+
+    return {i,j};
 }
 
-function createMap( n ){
-	return Array(n).fill( Array(n).fill( 0 ))
-			  .map( i => i.map( j => [0,0] ));
+const drawImageTile = function( context, i, j, texture){
+    let u= (j-i)*TileBase.width/2;
+    let v= (i+j)*TileBase.height/2;
+
+    // calculate draw corodinates for tile: i,j
+    // https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/drawImage
+    // void ctx.drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
+    context.drawImage( texture.source.image,
+                        texture.source.u, texture.source.v,
+                        TileTexture.width, TileTexture.height,
+                        u,v,
+                        TileTexture.width, TileTexture.height);
 }
 
-const click = (map, event) => {
-	const pos = getPosition(event);
+function drawMap( canvas, map ){
+    const context = canvas.getContext("2d");
 
-    if (pos.x >= 0 && pos.x < map.size() && pos.y >= 0 && pos.y < map.size()) {
-		
-		map[pos.x][pos.y][0] = (event.which === 3) ? 0 : tool[0]
-		map[pos.x][pos.y][1] = (event.which === 3) ? 0 : tool[1]
-		isPlacing = true
+    context.resetTransform();
 
-		drawMap()
-		cf.clearRect(-w, -h, w * 2, h * 2)
-	}
-	
-	const hash = map.saveHash();
-	history.replaceState(undefined, undefined, `#${hash}`);	
+    context.clearRect( 0, 0, canvas.width, canvas.height );
+
+    context.translate( canvas.width/2 - TileBase.width/2, 0);
+
+    for(let i = 0; i < map.size(); i++){    
+        for(let j = 0; j < map.size(); j++){
+            const tile = map.tiles[i][j];
+            const texture = map.bank.tiles[tile.texture_id];
+            drawImageTile( context, i, j, texture);
+        }
+    }
 }
 
-const unclick = () => {
-	if (isPlacing)
-		isPlacing = false
+const drawCursor = function(canvas, i, j, color){
+    const context = canvas.getContext("2d");
+    context.resetTransform();
+
+    const topBorder = 130;
+
+    context.save()
+    context.clearRect( 0, 0, canvas.width, canvas.height);
+    context.translate( canvas.width/2, topBorder );
+    context.translate(  (j-i)*TileBase.width/2,
+                        (i+j)*TileBase.height/2 );
+    context.beginPath()
+    context.moveTo( 0, 0);
+    context.lineTo( TileBase.width/2, TileBase.height/2);
+    context.lineTo( 0, TileBase.height);
+    context.lineTo(-TileBase.width/2, TileBase.height/2);
+    context.closePath()
+    context.fillStyle = 'rgba(0,0,0,0.2)';
+    context.fill()
+    context.restore()
 }
 
-const drawMap = () =>{
-	bg.clearRect(-w,-h,w*2,h*2)
-	for(let i = 0; i < map.size(); i++){
-		for(let j = 0; j < map.size(); j++){
-			drawImageTile(bg,i,j,map[i][j][0],map[i][j][1])
-		}
-	}
+const highlight = function(city_layer, ui_layer, map, event){
+    if (isPlacing){
+        click(city_layer, map, event);
+    }
+
+    let {i,j} = getTileIndex(city_layer, event.offsetX, event.offsetY);
+
+    if( (0 <= i && i < map.size()) && ( 0 <= j && j < map.size()) ){
+        drawCursor(ui_layer, i, j);
+    }
 }
 
-const drawTile = (c,x,y,color) => {
-	c.save()
-	c.translate((y-x) * tileWidth/2,(x+y)*tileHeight/2)
-	c.beginPath()
-	c.moveTo(0,0)
-	c.lineTo(tileWidth/2,tileHeight/2)
-	c.lineTo(0,tileHeight)
-	c.lineTo(-tileWidth/2,tileHeight/2)
-	c.closePath()
-	c.fillStyle = color
-	c.fill()
-	c.restore()
-}
+// ====== ====== ====== ====== Tile Texture ====== ====== ====== ======
+// ==================================================================
 
-const drawImageTile = (c,x,y,i,j) => {
-	c.save()
-	c.translate((y-x) * tileWidth/2,(x+y)*tileHeight/2)
-	j *= 130
-	i *= 230
-	c.drawImage(texture,j,i,130,230,-65,-130,130,230)
-	c.restore()
+// represents an instance of a placed tile
+class TileBase {
+    constructor(){}
 }
-
-const getPosition = e => {
-	const _y =  (e.offsetY - tileHeight * 2) / tileHeight,
-				_x =  e.offsetX / tileWidth - map.size() / 2
-	x = Math.floor(_y-_x)
-	y = Math.floor(_x+_y)
-	return {x,y}
-}
+TileBase.height = 66;
+TileBase.width = 130;
+TileBase.edge = Math.sqrt( Math.pow(TileBase.height/2,2) + Math.pow(TileBase.width/2, 2) )
 
 // ====== ====== ====== ====== Map Module ====== ====== ====== ======
 // ==================================================================
-function newMap( n ){
-	map = Array(n).fill( Array(n).fill( 0 ))
-			  .map( i => i.map( j => [0,0] ));
 
-	map.size = _ => map.length;
-	
-	// From https://stackoverflow.com/a/36046727
-	map._ToBase64 = function(u8){
-		return btoa(String.fromCharCode.apply(null, u8))
-	}
-
-	map._FromBase64 = function(str){
-		return atob(str).split('').map( c => c.charCodeAt(0) )
-	}
-
-	map.saveHash = function() {
-		let c = 0
-		const u8 = new Uint8Array(map.size());
-		for(let i = 0; i < map.size(); i++){
-			for(let j = 0; j < map.size(); j++){
-				u8[c++] = map[i][j][0]*texWidth + map[i][j][1]
-			}
-		}
-		return this._ToBase64(u8);
-	}
-
-	map.loadHash = function(state) {
-		let u8 = this._FromBase64(state)
-		let c = 0
-		for(let i = 0; i < map.size(); i++) {
-			for(let j = 0; j < map.size(); j++) {
-				const t = u8[c++] || 0
-				const x = Math.trunc(t / texWidth)
-				const y = Math.trunc(t % texWidth)
-				map[i][j] = [x,y]
-			}
-		}
-	}
-
-	return map;
+// data storage to define the city
+class Tile {
+    constructor( texture_id ) {
+        this.texture_id = texture_id;
+    }
 }
 
-const viz = (e) => {
-	if (isPlacing)
-		click(e)
-	const pos = getPosition(e)
-	cf.clearRect(-w,-h,w*2,h*2)
-	if( pos.x >= 0 && pos.x < map.size() && pos.y >= 0 && pos.y < map.size())
-		drawTile(cf,pos.x,pos.y,'rgba(0,0,0,0.2)')
+class Map {
+    constructor( n ){
+        this.tiles = Array(n).fill( Array(n).fill( 0 ))
+                    .map( i => i.map( j => new Tile(i,j, null) ));
+        this.bank = null;
+    }
+
+    size() { 
+        return this.tiles.length; 
+    }
+    
+    // From https://stackoverflow.com/a/36046727
+    static _ToBase64(u8){
+        return btoa(String.fromCharCode.apply(null, u8))
+    }
+
+    static _FromBase64(str){
+        return atob(str).split('').map( c => c.charCodeAt(0) )
+    }
+
+    save() {
+        let c = 0
+        const u8 = new Uint8Array(this.size()*this.size());
+        for(let i = 0; i < this.size(); i++){
+            for(let j = 0; j < this.size(); j++){
+                u8[c++] = this.tiles[i][j].texture_id;
+            }
+        }
+
+        return Map._ToBase64(u8);
+    }
+
+    load(state) {
+        if( ! this.bank ){
+            return;
+        }
+
+        console.log("::Loading Hash: %s", state);
+
+        const u8 = Map._FromBase64(state);
+        let c = 0
+        for(let i = 0; i < this.size(); i++) {
+            for(let j = 0; j < this.size(); j++) {
+                const id = u8[c++] || 0;
+                const tile = new Tile( id );
+                this.tiles[i][j] = tile;
+            }
+        }
+    }
 }
+
+// ====== ====== ====== Textures Module ====== ====== ====== ======
+// ================================================================
+
+class TileTexture {
+    constructor(texid, image, u, v) {
+        this.id = texid;
+        this.source = { image, u, v}
+    }
+}
+TileTexture.height = 230;
+TileTexture.width = 130;
+
+class TextureBank {
+    constructor(){
+        this.sources = [];
+        this.tiles = [];
+    }
+    
+    async loadTextures(){
+        /* texture from https://opengameart.org/content/isometric-landscape */
+        const files = [{path: "textures/01_130x66_130x230.png"}];
+
+        const loads = files.map( f => {
+            return new Promise(function(resolve, reject) {
+                const texture = new Image();
+                texture.src = f.path;
+                texture.onload = resolve
+            })          
+        });
+
+        const textures = await Promise.all(loads);
+        textures.forEach(event => {
+            // console.log("onLoadTexture...");
+            this.sources.push(event);
+            const image = event.srcElement;
+            const columnCount = image.width / TileTexture.width;
+            const rowCount = image.height / TileTexture.height;
+            
+            let next_texture_id = this.tiles.length;
+            // load image row-by-row
+            for (let j = 0; j < rowCount; ++j) {
+                for (let i = 0; i < columnCount; ++i) {
+                    let u = i * TileTexture.width;
+                    let v = j * TileTexture.height;
+                    const tex = new TileTexture(next_texture_id++, image, u, v);
+                    this.tiles.push(tex);
+                }
+            }           
+        });
+    }
+}
+
+// ====== ====== ====== ====== Main ====== ====== ====== ======
+// ==================================================================
+function populate_toolbar(bank){
+    const tools = $('#tools');
+
+    bank.tiles.forEach( tex => {         
+        const div = $c('div');
+        div.id = `tool_${tex.id}`;
+        div.style.display = "block";
+            
+        /* width of 132 instead of 130  = 130 image + 2 border = 132 */
+        // div.style.backgroundPosition = `-${j*130+2}px -${i*230}px`
+        div.style.backgroundPosition = `-${tex.source.u}px -${tex.source.v}px`
+        div.addEventListener('click', e => {
+            if (activeToolDiv){
+                $(`#${activeToolDiv}`).classList.remove('selected')
+            }
+            activeToolDiv = e.target.id;
+            activeTexId = tex.id;
+            $(`#${activeToolDiv}`).classList.add('selected');
+        });
+        tools.appendChild( div );
+    });
+
+}
+    
+// "main" / entry point:
+const init = function(){
+
+    // let area = $("#area");
+    let map = new Map(8);
+    
+    let city_layer = $("#bg");
+    // these dimensions are not _exact_ ... but should be a good heuristic :)
+    city_layer.width = map.size() * TileBase.width;
+    city_layer.height = map.size() * TileBase.height + TileTexture.height;
+    console.log(">> Building canvas: %d x %d ", city_layer.width, city_layer.height );
+    
+    let bank = new TextureBank();
+    
+    bank.loadTextures().then( result => {
+        map.bank = bank;
+        map.load(document.location.hash.substring(1));
+        drawMap(city_layer, map);
+        
+        populate_toolbar(bank);
+    });
+
+    let ui_layer = $('#fg')
+    ui_layer.width = city_layer.width;
+    ui_layer.height = city_layer.height;
+        
+    ui_layer.addEventListener('contextmenu', e => { e.preventDefault();} )
+    ui_layer.addEventListener('mousemove', e => highlight(city_layer, ui_layer, map, e) );
+    
+    fg.addEventListener('mouseup', e => unclick(e) );
+    fg.addEventListener('mousedown', e => {click(city_layer, map, e);} );   
+
+}();

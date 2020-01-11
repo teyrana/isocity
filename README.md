@@ -14,4 +14,10 @@ A simple JavaScript city builder with no simulation at all. No budget, no goals.
 
 ## Credits
 
+
+
 Textures from - [http://www.kenney.nl](https://opengameart.org/users/kenney)
+
+## Tools:
+
+[![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)

@@ -56,7 +56,7 @@ const getTileIndex = (canvas, x, y) => {
   return { i, j }
 }
 
-const drawImageTile = (context, i, j, texture) => {
+const drawTile = (context, i, j, texture) => {
   const u = (j - i) * TileBase.width / 2
   const v = (i + j) * TileBase.height / 2
   const du = TileTexture.width
@@ -86,7 +86,7 @@ const drawMap = (canvas, map) => {
     for (let j = 0; j < map.dimension; j++) {
       const tile = map.tiles[i][j]
       const texture = map.bank.tiles[tile.textureId]
-      drawImageTile(context, i, j, texture)
+      drawTile(context, i, j, texture)
     }
   }
 }
@@ -112,7 +112,7 @@ const drawCursor = (canvas, i, j) => {
   context.restore()
 }
 
-const highlight = (cityLayer, interfaceLayer, map, event) => {
+const onMove = (cityLayer, interfaceLayer, map, event) => {
   if (isPlacing) {
     click(cityLayer, map, event)
   }
@@ -181,8 +181,6 @@ class Map {
     if (!this.bank) {
       return
     }
-
-    console.log('::Loading Hash: %s ', state)
 
     const u8 = Map._FromBase64(state)
     let c = 0
@@ -302,7 +300,7 @@ const populateToolbar = (bank) => {
   interfaceLayer.height = cityLayer.height
 
   interfaceLayer.addEventListener('contextmenu', e => e.preventDefault())
-  interfaceLayer.addEventListener('mousemove', e => highlight(cityLayer, interfaceLayer, map, e))
+  interfaceLayer.addEventListener('mousemove', e => onMove(cityLayer, interfaceLayer, map, e))
 
   interfaceLayer.addEventListener('mouseup', e => unclick(e))
   interfaceLayer.addEventListener('mousedown', e => click(cityLayer, map, e))

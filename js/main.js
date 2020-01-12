@@ -198,9 +198,12 @@ class Map {
 // ================================================================
 
 class TileTexture {
-  constructor (texid, image, u, v) {
-    this.id = texid
-    this.source = { image, u, v }
+  constructor (image, meta) {
+    this.id = meta.i
+    this.source = { image, u: meta.u, v: meta.v }
+    this.alt = meta.d
+    this.l = meta.l
+    this.r = meta.r
   }
 }
 TileTexture.height = 230
@@ -214,36 +217,92 @@ class TextureBank {
 
   async loadTextures () {
     /* texture from https://opengameart.org/content/isometric-landscape */
-    const files = [{ path: 'textures/01_130x66_130x230.png' }]
+    const files = [{ 
+      path: 'textures/01_130x66_130x230.png',
+      textures: [
+        // { i: 1, // identifies this tile-texture // note: id numbers are _file-relative_
+        //   d: 'description', // quick description of this tile
+        //   l: 2, // left-rotate-index
+        //   r: 3, // right-rotate-index
+        //   u: 260, // horizontal texture coordinate
+        //   v: 460, // vertical texture coordinate
+        // },
+        {i: 0, d: 'concrete', u: 0, v: 0},
+        {i: 1, d:'Northwest Road', l:2, r:2, u: 260, v: 0},
+        {i: 2, d: "Southwest Road", r:1, l:1, u: 390, v: 0},
+        // { u: 130, v: 0, alt='fountain'}
+
+        // { u: 520, v: 0 },        // { u: 650, v: 0 },
+        // { u: 780, v: 0 },        // { u: 910, v: 0 },
+        // { u: 1040, v: 0 },        // { u: 1170, v: 0 },
+        // { u: 1300, v: 0 },        // { u: 1430, v: 0 },
+        // { u: 0, v: 230 },
+        // { u: 130, v: 230 },        // { u: 260, v: 230 },        // { u: 390, v: 230 },
+        // { u: 520, v: 230 },        // { u: 650, v: 230 },
+        // { u: 780, v: 230 },        // { u: 910, v: 230 },
+        // { u: 1040, v: 230 },        // { u: 1170, v: 230 },        // { u: 1300, v: 230 },
+        // { u: 1430, v: 230 },        // { u: 0, v: 460 },
+        // { u: 130, v: 460 },
+        {i: 26, d: 'Small Road: NE-SE', l: 28, r: 29, u: 260, v: 460},
+        {i: 27, d: 'Small Road: NW-SW', l: 29, r: 28, u: 390, v: 460},
+        {i: 28, d: 'Small Road: SW-SE', l: 27, r: 26, u: 520, v: 460},
+        {i: 29, d: 'Small Road: NW-NE', l: 26, r: 27, u: 650, v: 460},
+        // { u: 780, v: 460 },        // { u: 910, v: 460 },        // { u: 1040, v: 460 },
+        // { u: 1170, v: 460 },        // { u: 1300, v: 460 },        // { u: 1430, v: 460 },
+        // { u: 0, v: 690 },        // { u: 130, v: 690 },        
+        // big road corners
+        // { u: 260, v: 690 },
+        // { u: 390, v: 690 },
+        // { u: 520, v: 690 },
+        // { u: 650, v: 690 },
+
+        // low walls
+        {i: 42, d: 'Low Wall: NE', l: 45, r: 43, u: 780, v: 690},
+        {i: 43, d: 'Low Wall: NW', l: 42, r: 44, u: 910, v: 690},
+        {i: 44, d: 'Low Wall: SW', l: 43, r: 45, u: 1040, v: 690},
+        {i: 45, d: 'Low Wall: SE', l: 44, r: 42, u: 1170, v: 690},
+
+        // { u: 1300, v: 690 },        // { u: 1430, v: 690 },        // { u: 0, v: 920 },
+        // { u: 130, v: 920 },        // { u: 260, v: 920 },        // { u: 390, v: 920 },
+        // { u: 520, v: 920 },        // { u: 650, v: 920 },        // { u: 780, v: 920 },
+        // { u: 910, v: 920 },        // { u: 1040, v: 920 },        // { u: 1170, v: 920 },
+        // { u: 1300, v: 920 },        // { u: 1430, v: 920 },
+        // { u: 0, v: 1150 },        // { u: 130, v: 1150 },        // { u: 260, v: 1150 },
+        // { u: 390, v: 1150 },
+        // { u: 520, v: 1150 },        // { u: 650, v: 1150 },        // { u: 780, v: 1150 },
+        // { u: 910, v: 1150 },        // { u: 1040, v: 1150 },        // { u: 1170, v: 1150 },
+        // { u: 1300, v: 1150 },        // { u: 1430, v: 1150}
+      ]
+    }]
 
     const loads = files.map(f => {
       /* global Image */
 
       return new Promise((resolve, reject) => {
-        const texture = new Image()
-        texture.src = f.path
-        texture.onload = resolve
+        const image = new Image()
+        image.src = f.path
+        image.textures = f.textures
+        image.onload = resolve
       })
     })
 
     const textures = await Promise.all(loads)
     textures.forEach(event => {
-      // console.log("onLoadTexture...");
       this.sources.push(event)
-      const image = event.srcElement
+      const image = event.target
+      const textures = event.target.textures
+
       const columnCount = image.width / TileTexture.width
       const rowCount = image.height / TileTexture.height
 
+      console.log("Loading textures...")
+
       // load image row-by-row
-      let nextTextureId = this.tiles.length
-      for (let j = 0; j < rowCount; ++j) {
-        for (let i = 0; i < columnCount; ++i) {
-          const u = i * TileTexture.width
-          const v = j * TileTexture.height
-          const tex = new TileTexture(nextTextureId++, image, u, v)
-          this.tiles.push(tex)
-        }
-      }
+      let lastTextureId = 0
+      textures.forEach(metadata => {
+        const tex = new TileTexture(image, metadata)
+        this.tiles[tex.id] = tex
+      })
     })
   }
 }

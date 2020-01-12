@@ -59,6 +59,8 @@ const getTileIndex = (canvas, x, y) => {
 const drawImageTile = (context, i, j, texture) => {
   const u = (j - i) * TileBase.width / 2
   const v = (i + j) * TileBase.height / 2
+  const du = TileTexture.width
+  const dv = TileTexture.height
 
   // calculate draw coordinates for tile: i,j
   // https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/drawImage
@@ -67,8 +69,7 @@ const drawImageTile = (context, i, j, texture) => {
     texture.source.image,
     texture.source.u, texture.source.v,
     TileTexture.width, TileTexture.height,
-    u, v,
-    TileTexture.width, TileTexture.height
+    u, v, du, dv
   )
 }
 

@@ -30,7 +30,6 @@ canvas {
 #tools {
 	display: flex;
 	flex-direction: row;
-	align-items: center;
 	justify-content: center;
 	flex-wrap: wrap;
 	overflow: auto;
@@ -38,6 +37,7 @@ canvas {
 	height: 100%;
 	transition: width .8s;
 }
+
 @media only screen and (max-width: 1700px) {
 	#tools {
 		width: 440px;
@@ -51,23 +51,33 @@ canvas {
 }
 @media only screen and (max-width: 1380px) {
 	#tools {
-		width: 160px;
+		width: 150px;
 	}
 }
 
-#tools > div {
+.tile-tool {
 	display: block;
 	background-image: url('../textures/01_130x66_130x230.png');
 	background-repeat: no-repeat;
 	background-size: auto;
-	width: 130px;
+	width: 128px;
 	height: 230px;
-	border: 2px dashed transparent;
-	box-sizing: border-box;
 }
 
-#tools > div.selected {
-	border-color: #b05355;
+.tool-section {
+	width: 100%;
+	margin: 0;
+	border: 0;
+	padding: 0;
+}
+
+.section-content {
+	margin: 0;
+	border: 0;
+	padding: 0;
+	display: grid;
+	grid-gap: 5px;
+	grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
 }
 
 @media only screen and (max-width: 966px) {

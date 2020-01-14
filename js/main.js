@@ -1,9 +1,5 @@
 'use strict'
 
-const $ = _ => document.querySelector(_)
-
-const $c = _ => document.createElement(_)
-
 let activeToolDiv = null
 let activeTexId = 0
 let isPlacing = false
@@ -256,10 +252,11 @@ class TextureBank {
 // ====== ====== ====== ====== Main ====== ====== ====== ======
 // ==================================================================
 const populateToolbar = (bank) => {
-  const tools = $('#tools')
+  const tools = document.querySelector('#tools')
 
   bank.tiles.forEach(tex => {
-    const div = $c('div')
+    const div = document.createElement('div')
+
     div.id = `tool_${tex.id}`
     div.style.display = 'block'
 
@@ -268,11 +265,11 @@ const populateToolbar = (bank) => {
     div.style.backgroundPosition = `-${tex.source.u}px -${tex.source.v}px`
     div.addEventListener('click', e => {
       if (activeToolDiv) {
-        $(`#${activeToolDiv}`).classList.remove('selected')
+        document.querySelector(`#${activeToolDiv}`).classList.remove('selected')
       }
       activeToolDiv = e.target.id
       activeTexId = tex.id
-      $(`#${activeToolDiv}`).classList.add('selected')
+      document.querySelector(`#${activeToolDiv}`).classList.add('selected')
     })
     tools.appendChild(div)
   })
@@ -280,14 +277,14 @@ const populateToolbar = (bank) => {
 
 // "main" / entry point:
 (function init () {
-  // let area = $('#area')
   const map = new Map(8)
 
-  const cityLayer = $('#bg')
+  const cityLayer = document.querySelector('#bg')
+
   // these dimensions are not _exact_ ... but should be a good heuristic :)
   cityLayer.width = map.dimension * TileBase.width
   cityLayer.height = map.dimension * TileBase.height + TileTexture.height
-  console.log('>> Building canvas: %d x %d', cityLayer.width, cityLayer.height)
+  console.log(`>> Building canvas: ${cityLayer.width} x ${cityLayer.height}`)
 
   const bank = new TextureBank()
 
@@ -299,7 +296,7 @@ const populateToolbar = (bank) => {
     populateToolbar(bank)
   })
 
-  const interfaceLayer = $('#fg')
+  const interfaceLayer = document.querySelector('#fg')
   interfaceLayer.width = cityLayer.width
   interfaceLayer.height = cityLayer.height
 

@@ -23,6 +23,26 @@ const click = (interfaceLayer, map, event) => {
   history.replaceState(undefined, undefined, `#${hash}`)
 }
 
+const onKeyDown = (interfaceLayer, bank, event) => {
+  const keyName = event.key
+
+  if (keyName === '1' || keyName === 'l' || keyName === 'LeftArrow') {
+    // rotate tool left
+    const oldTexture = bank.tiles[interfaceLayer.activeToolId]
+    const newTexture = bank.tiles[oldTexture.left]
+
+    interfaceLayer.activeToolId = newTexture.id
+    drawActiveTool(interfaceLayer, newTexture)
+  } else if (keyName === '2' || keyName === 'r' || keyName === 'RightArrow') {
+    // rotate tool left
+    const oldTexture = bank.tiles[interfaceLayer.activeToolId]
+    const newTexture = bank.tiles[oldTexture.right]
+
+    interfaceLayer.activeToolId = newTexture.id
+    drawActiveTool(interfaceLayer, newTexture)
+  }
+}
+
 const unclick = (_, interfaceLayer) => {
   if (interfaceLayer.isPlacing) {
     interfaceLayer.isPlacing = false
@@ -423,6 +443,9 @@ const populateToolbar = (bank, interfaceLayer) => {
 
   interfaceLayer.addEventListener('mouseup', e => unclick(e, interfaceLayer))
   interfaceLayer.addEventListener('mousedown', e => { click(interfaceLayer, map, e); drawMap(cityLayer, map) })
+
+  // document.addEventListener('keyup', null )
+  document.addEventListener('keydown', e => onKeyDown(interfaceLayer, bank, e))
 
   bank.loadTextures().then(_ => {
     map.bank = bank

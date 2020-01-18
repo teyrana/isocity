@@ -9,7 +9,7 @@ const click = (interfaceLayer, map, event) => {
   if ((i >= 0 && i < map.dimension) && (j >= 0 && j < map.dimension)) {
     if (event.which === 3) {
       map.tiles[i][j].textureId = 0
-    } else if (interfaceLayer.activeToolId >= 0) {
+    } else if (interfaceLayer.activeToolId > 0) {
       map.tiles[i][j].textureId = interfaceLayer.activeToolId
     } else {
       return
@@ -84,7 +84,16 @@ const drawMap = (canvas, map) => {
   }
 }
 
+/* global CanvasRenderingContext2D */
 const drawActiveTool = (context, texture) => {
+  if (!(context instanceof CanvasRenderingContext2D)) {
+    const canvas = context
+    context = canvas.getContext('2d')
+
+    context.resetTransform()
+    context.clearRect(0, 0, canvas.width, canvas.height)
+  }
+
   if (typeof texture === 'undefined' || texture === null) {
     // this is a common case, and happens on startup
     // don't worry... but don't try to draw anything :)
@@ -94,6 +103,7 @@ const drawActiveTool = (context, texture) => {
   const h = texture.source.h
   const w = texture.source.w
   context.clearRect(0, 0, h, w)
+
   drawTile(context, 0, 0, texture)
 }
 
@@ -212,8 +222,8 @@ class TileTexture {
     this.id = meta.i
     this.source = { image, u: meta.u, v: meta.v }
     this.alt = meta.d
-    this.left = meta.l
-    this.right = meta.r
+    this.left = meta.l || meta.i
+    this.right = meta.r || meta.i
     this.section = meta.section || 'Misc'
   }
 }
@@ -268,10 +278,10 @@ class TextureBank {
           // { u: 0, v: 690 },        // { u: 130, v: 690 },
 
           // big road corners
-          { i: 30, d: 'Wide Road: XX-XX', l: 30, r: 30, u: 260, v: 690 },
-          { i: 31, d: 'Wide Road: XX-XX', l: 30, r: 30, u: 390, v: 690 },
-          { i: 32, d: 'Wide Road: XX-XX', l: 30, r: 30, u: 520, v: 690 },
-          { i: 33, d: 'Wide Road: XX-XX', l: 30, r: 30, u: 650, v: 690 }
+          { i: 30, d: 'Wide Road: XX-XX', l: 33, r: 32, u: 260, v: 690 },
+          { i: 31, d: 'Wide Road: XX-XX', l: 32, r: 33, u: 390, v: 690 },
+          { i: 32, d: 'Wide Road: XX-XX', l: 30, r: 31, u: 520, v: 690 },
+          { i: 33, d: 'Wide Road: XX-XX', l: 31, r: 30, u: 650, v: 690 }
         ],
         Water: [
           // { u: 130, v: 0, alt='fountain'}
@@ -380,12 +390,7 @@ const populateToolbar = (bank, interfaceLayer) => {
 
     div.addEventListener('click', e => {
       interfaceLayer.activeToolId = tex.id
-
-      const context = interfaceLayer.getContext('2d')
-      context.resetTransform()
-      context.clearRect(0, 0, interfaceLayer.width, interfaceLayer.height)
-
-      drawActiveTool(context, tex)
+      drawActiveTool(interfaceLayer, tex)
     })
 
     container.appendChild(div)

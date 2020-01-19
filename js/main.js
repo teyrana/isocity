@@ -3,6 +3,9 @@
 // not sure where this comes from...
 /* global history */
 
+// ====== ====== ====== ====== Rendering Functions ====== ====== ====== ======
+// ==================================================================
+
 const click = (interfaceLayer, map, event) => {
   const { i, j } = getTileIndex(interfaceLayer, event.offsetX, event.offsetY)
 
@@ -185,6 +188,8 @@ class Tile {
   }
 }
 
+/* global atob */
+/* global btoa */
 class Map {
   constructor (n) {
     this.dimension = n
@@ -196,12 +201,10 @@ class Map {
 
   // From https://stackoverflow.com/a/36046727
   static _ToBase64 (u8) {
-    /* global btoa */
     return btoa(String.fromCharCode.apply(null, u8))
   }
 
   static _FromBase64 (str) {
-    /* global atob */
     return atob(str).split('').map(c => c.charCodeAt(0))
   }
 
@@ -250,6 +253,7 @@ class TileTexture {
 TileTexture.height = 230
 TileTexture.width = 130
 
+/* global Image */
 class TextureBank {
   constructor () {
     this.sources = []
@@ -326,8 +330,6 @@ class TextureBank {
     }]
 
     const loads = files.map(f => {
-      /* global Image */
-
       return new Promise((resolve, reject) => {
         const image = new Image()
         image.src = f.path

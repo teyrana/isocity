@@ -8,9 +8,7 @@
 
 const click = (interfaceLayer, map, event) => {
   const { i, j } = getTileIndex(interfaceLayer, event.offsetX, event.offsetY)
-  console.log(event)
-  console.log(`onClick:  e: ${event.button}   id: ${interfaceLayer.activeToolId}   if: ${interfaceLayer.isPlacing}`)
-
+  
   if ((i >= 0 && i < map.dimension) && (j >= 0 && j < map.dimension)) {
     if (event.button === 0) {
       if (interfaceLayer.activeToolId >= 0) { // left-click
@@ -87,8 +85,8 @@ const drawTile = (context, i, j, texture) => {
   // https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/drawImage
   // void ctx.drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight)
   context.drawImage(
-    source.image, source.u, source.v, height, width,
-    dest.u, dest.v, height, width
+    source.image, source.u, source.v, width, height,
+    dest.u, dest.v, width, height
   )
 }
 
@@ -135,12 +133,10 @@ const drawActiveTool = (context, texture) => {
 }
 
 const drawCursor = function (context, i, j) {
-  const { height, width } = TileTexture.Base
-
   // move to origin
-  context.translate(context.canvas.width / 2,
-    height - 5)
+  context.translate(context.canvas.width / 2, TileTexture.MaxHeight - TileTexture.Base.height - 2)
 
+  const { height, width } = TileTexture.Base
   context.translate((j - i) * width / 2, (i + j) * height / 2)
 
   context.beginPath()
@@ -154,9 +150,6 @@ const drawCursor = function (context, i, j) {
 }
 
 const onMove = (cityLayer, interfaceLayer, map, event) => {
-  console.log('>> onMove:  mouse: ', event.button, '....', interfaceLayer.activeToolId)
-  // console.log(event)
-
   if (interfaceLayer.isPlacing) {
     const newEvent = {
       button: interfaceLayer.lastMouseButton,
@@ -180,6 +173,7 @@ const onMove = (cityLayer, interfaceLayer, map, event) => {
     const texture = map.bank.tiles[interfaceLayer.activeToolId]
     drawActiveTool(context, texture)
 
+    context.resetTransform()
     drawCursor(context, i, j)
   }
 }
@@ -241,13 +235,17 @@ const textureFileData = [
   {
     offset: 0,
     path: 'textures/roads.png',
-    tools: [0, 1, 3, 5, 7, 8, 9, 26, 30],
+    tools: [0, 1, 3, 5, 7, 8, 9, 
+            11, 13, 17, 
+            21, 23, 27, 31, 
+            37
+          ],
     textures: {
       // example: { // section-name
       //   { i: -1, // identifies this tile-texture // note: id numbers are _file-relative_
       //     d: 'description', // quick description of this tile
-      //     l: 2, // left-rotate-index
-      //     r: 3, // right-rotate-index
+      //     l: 2, // clockwise-rotate-index
+      //     r: 3, // counter-clockwise-rotate-index
       //     u: 260, // horizontal texture coordinate
       //     v: 460 // vertical texture coordinate
       //   }],
@@ -255,40 +253,48 @@ const textureFileData = [
         { i: 0, d: 'Concrete', h: 130, u: 0, v: 0, w: 128 }
       ],
       transport: [
+        // row 0
         { i: 1, d: 'NW-SE Road', h: 130, l: 2, r: 2, u: 260, v: 0, w: 128 },
         { i: 2, d: 'SW-NE Road', h: 130, r: 1, l: 1, u: 390, v: 0 },
         { i: 3, d: 'NW-SE Road Crossing', h: 130, l: 4, r: 4, u: 520, v: 0 },
         { i: 4, d: 'SW-NE Road Crossing', h: 130, l: 3, r: 3, u: 650, v: 0 },
         { i: 5, d: 'NW-SE Tree Road', h: 130, l: 6, r: 6, u: 780, v: 0 },
         { i: 6, d: 'SW-NE Tree Road', h: 130, l: 5, r: 5, u: 910, v: 0 },
-
-        { i: 7, d: '4-Way Roundabout', u: 1040, v: 0 },
-        { i: 8, d: '4-Way Road', u: 1170, v: 0 },
-
-        { i: 9, d: 'SW-NE Divided Road', l: 10, r: 10, u: 1300, v: 0 },
-        { i: 10, d: 'NW-SE Divided Road', l: 9, r: 9, u: 1430, v: 0 },
-
-        // { u: 0, v: 230 },
-        // { u: 130, v: 230 },        // { u: 260, v: 230 },        // { u: 390, v: 230 },
-        // { u: 520, v: 230 },        // { u: 650, v: 230 },
-        // { u: 780, v: 230 },        // { u: 910, v: 230 },
-        // { u: 1040, v: 230 },        // { u: 1170, v: 230 },        // { u: 1300, v: 230 },
-        // { u: 1430, v: 230 },        // { u: 0, v: 460 },
-        // { u: 130, v: 460 },
-        { i: 26, d: 'Small Road: NE-SE', l: 28, r: 29, u: 260, v: 280 },
-        { i: 27, d: 'Small Road: NW-SW', l: 29, r: 28, u: 390, v: 280 },
-        { i: 28, d: 'Small Road: SW-SE', l: 27, r: 26, u: 520, v: 280 },
-        { i: 29, d: 'Small Road: NW-NE', l: 26, r: 27, u: 650, v: 280 },
-
-        // { u: 780, v: 460 },        // { u: 910, v: 460 },        // { u: 1040, v: 460 },
-        // { u: 1170, v: 460 },        // { u: 1300, v: 460 },        // { u: 1430, v: 460 },
-        // { u: 0, v: 690 },        // { u: 130, v: 690 },
-
-        // big road corners
-        { i: 30, d: 'Wide Road: NE-SE', l: 33, r: 32, u: 260, v: 280 },
-        { i: 31, d: 'Wide Road: NW-SW', l: 32, r: 33, u: 390, v: 280 },
-        { i: 32, d: 'Wide Road: NW-NE', l: 30, r: 31, u: 520, v: 280 },
-        { i: 33, d: 'Wide Road: SW-SE', l: 31, r: 30, u: 650, v: 280 }
+        { i: 7, d: '4-Way Roundabout', h: 130, u: 1040, v: 0 },
+        { i: 8, d: '4-Way Road', h: 130, u: 1170, v: 0 },
+        { i: 9, d: 'SW-NE Divided Road', h: 130, l: 10, r: 10, u: 1300, v: 0 },
+        { i: 10, d: 'NW-SE Divided Road', l: 130, r: 9, u: 1430, v: 0 },
+        // row 1
+        { i: 11, d: 'Large Lit Road: NW-SE', h: 130, l: 12, r: 12, u: 0, v: 142 },
+        { i: 12, d: 'Large Lit Road: SW-NE', h: 130, l: 11, r: 11, u: 260, v: 142 },
+        { i: 13, d: 'Wide Road End: NE', h: 130, l: 14, r: 15, u: 520, v: 142 },
+        { i: 14, d: 'Wide Road End: SE', h: 130, l: 16, r: 13, u: 650, v: 142 },
+        { i: 15, d: 'Wide Road End: NW', h: 130, l: 13, r: 16, u: 780, v: 142 },
+        { i: 16, d: 'Wide Road End: SW', h: 130, l: 15, r: 14, u: 910, v: 142 },
+        { i: 17, d: 'Wide Road-T-Small Road: SE', h: 130, l: 20, r: 19, u: 1040, v: 142 },
+        { i: 18, d: 'Wide Road-T-Small Road: NW', h: 130, l: 19, r: 20, u: 1170, v: 142 },
+        { i: 19, d: 'Wide Road-T-Small Road: NE', h: 130, l: 17, r: 18, u: 1300, v: 142 },
+        { i: 20, d: 'Wide Road-T-Small Road: SW', h: 130, l: 18, r: 17, u: 1430, v: 142 },
+        // row 2
+        { i: 21, d: 'Small Road: SW-NE', h: 112, l: 22, r: 22, u: 0, v: 272 },
+        { i: 22, d: 'Small Road: NW-SE', h: 112, l: 21, r: 21, u: 130, v: 272 },
+        { i: 23, d: 'Small Road Corner: NE-SE', h: 112, l: 25, r: 26, u: 260, v: 272 },
+        { i: 24, d: 'Small Road Corner: NW-SW', h: 112, l: 26, r: 25, u: 390, v: 272 },
+        { i: 25, d: 'Small Road Corner: SW-SE', h: 112, l: 24, r: 23, u: 520, v: 272 },
+        { i: 26, d: 'Small Road Corner: NW-NE', h: 112, l: 23, r: 24, u: 650, v: 272 },
+        { i: 27, d: 'Small Road End: NE-SE', h: 112, l: 28, r: 29, u: 780, v: 272 },
+        { i: 28, d: 'Small Road End: NW-SW', h: 112, l: 29, r: 28, u: 910, v: 272 },
+        { i: 29, d: 'Small Road End: SW-SE', h: 112, l: 27, r: 26, u: 1040, v: 272 },
+        { i: 30, d: 'Small Road End: NW-NE', h: 112, l: 26, r: 27, u: 1170, v: 272 },
+        { i: 31, d: 'Level Tunnel Mouth: SW', h: 112, l: 34, r: 33, u: 1300, v: 272 },
+        { i: 32, d: 'Level Tunnel Mouth: NE', h: 112, l: 33, r: 34, u: 1430, v: 272 },
+        // row 3
+        { i: 33, d: 'Level Tunnel Mouth: SE', h: 103, l: 31, r: 32, u: 0, v: 382 },
+        { i: 34, d: 'Level Tunnel Mouth: NW', h: 103, l: 32, r: 31, u: 130, v: 382 },
+        { i: 35, d: 'Wide Road: NE-SE', h: 103, l: 38, r: 37, u: 260, v: 382 },
+        { i: 36, d: 'Wide Road: NW-SW', h: 103, l: 37, r: 38, u: 390, v: 382 },
+        { i: 37, d: 'Wide Road: NW-NE', h: 103, l: 35, r: 36, u: 520, v: 382 },
+        { i: 38, d: 'Wide Road: SW-SE', h: 103, l: 36, r: 35, u: 650, v: 382 }
       ]
     }
   }, {
@@ -297,10 +303,10 @@ const textureFileData = [
     tools: [1],
     textures: {
       divider: [
-        { i: 1, d: 'Low Wall: NE', h: 140, l: 4, r: 2, u: 130, v: 0 },
-        { i: 2, d: 'Low Wall: NW', h: 140, l: 1, r: 3, u: 260, v: 0 },
-        { i: 3, d: 'Low Wall: SW', h: 140, l: 2, r: 4, u: 390, v: 0 },
-        { i: 4, d: 'Low Wall: SE', h: 140, l: 3, r: 1, u: 520, v: 0 }
+        { i: 1, d: 'Low Wall: NE', h: 138, l: 4, r: 2, u: 130, v: 0 },
+        { i: 2, d: 'Low Wall: NW', h: 138, l: 1, r: 3, u: 260, v: 0 },
+        { i: 3, d: 'Low Wall: SW', h: 138, l: 2, r: 4, u: 390, v: 0 },
+        { i: 4, d: 'Low Wall: SE', h: 138, l: 3, r: 1, u: 520, v: 0 }
       ]
     }
   }, {
@@ -309,21 +315,21 @@ const textureFileData = [
     tools: [1, 2, 7, 8, 9],
     textures: {
       water: [
-        { i: 1, d: 'Basin: NE', l: 4, r: 6, u: 130, v: 0 },
-        { i: 2, d: 'Basin: SW/NE', l: 5, r: 5, u: 260, v: 0 },
-        { i: 3, d: 'Basin: SW', l: 6, r: 4, u: 390, v: 0 },
-        { i: 4, d: 'Basin: SE', l: 3, r: 1, u: 520, v: 0 },
-        { i: 5, d: 'Basin: NW/SE', l: 2, r: 2, u: 650, v: 0 },
-        { i: 6, d: 'Basin: NW', l: 4, r: 3, u: 780, v: 0 },
+        { i: 1, d: 'Basin: NE', h: 115, l: 4, r: 6, u: 130, v: 0 },
+        { i: 2, d: 'Basin: SW/NE', h: 115, l: 5, r: 5, u: 260, v: 0 },
+        { i: 3, d: 'Basin: SW', h: 115, l: 6, r: 4, u: 390, v: 0 },
+        { i: 4, d: 'Basin: SE', h: 115, l: 3, r: 1, u: 520, v: 0 },
+        { i: 5, d: 'Basin: NW/SE', h: 115, l: 2, r: 2, u: 650, v: 0 },
+        { i: 6, d: 'Basin: NW', h: 115, l: 4, r: 3, u: 780, v: 0 },
 
-        { i: 7, d: 'Solo Fountain', l: 7, r: 7, u: 0, v: 130 },
+        { i: 7, d: 'Solo Fountain', h: 120, l: 7, r: 7, u: 2, v: 114 },
 
-        { i: 8, d: 'Calm Fountain: NE', l: 12, r: 14, u: 130, v: 130 },
-        { i: 9, d: 'Calm Fountain: SW/NE', l: 13, r: 13, u: 260, v: 130 },
-        { i: 11, d: 'Calm Fountain: SW', l: 14, r: 12, u: 390, v: 130 },
-        { i: 12, d: 'Calm Fountain: SE', l: 11, r: 8, u: 520, v: 130 },
-        { i: 13, d: 'Calm Fountain: NW/SE', l: 9, r: 9, u: 650, v: 130 },
-        { i: 14, d: 'Calm Fountain: NW', l: 8, r: 11, u: 780, v: 130 }
+        { i: 8, d: 'Fountain: NE', h: 120, l: 12, r: 14, u: 130, v: 114 },
+        { i: 9, d: 'Fountain: SW/NE', h: 120, l: 13, r: 13, u: 260, v: 114 },
+        { i: 11, d: 'Fountain: SW', h: 120, l: 14, r: 12, u: 390, v: 114 },
+        { i: 12, d: 'Fountain: SE', h: 120, l: 11, r: 8, u: 520, v: 114 },
+        { i: 13, d: 'Fountain: NW/SE', h: 120, l: 9, r: 9, u: 650, v: 114 },
+        { i: 14, d: 'Fountain: NW', h: 120, l: 8, r: 11, u: 780, v: 114 }
       ]
     }
   }
@@ -335,7 +341,7 @@ class TileTexture {
     this.description = meta.d
     this.source = {
       image,
-      height: meta.h || TileTexture.DefaultWidth,
+      height: meta.h || TileTexture.DefaultHeight,
       u: meta.u || 0,
       v: meta.v || 0,
       width: meta.w || TileTexture.DefaultWidth
@@ -349,13 +355,10 @@ class TileTexture {
 TileTexture.DefaultHeight = 230
 TileTexture.DefaultWidth = 130
 TileTexture.MaxHeight = 230
-
-TileTexture.Base = (function () {
-  const height = 66
-  const width = TileTexture.DefaultWidth
-  const edge = Math.sqrt(Math.pow(height / 2, 2) + Math.pow(width / 2, 2))
-  return { height, width, edge }
-}())
+TileTexture.Base = {
+  height: 66,
+  width: TileTexture.DefaultWidth
+}
 
 /* global Image */
 class TextureBank {
@@ -455,11 +458,10 @@ const createToolDiv = (tex) => {
   div.style.backgroundRepeat = 'no-repeat'
   div.style.backgroundSize = 'auto'
 
-  const u = tex.source.u
-  const v = tex.source.v
+  const {height, u, v, width} = tex.source
   div.style.backgroundPosition = `-${u}px -${v}px`
-  div.style.height = `${tex.source.height}px`
-  div.style.width = `${tex.source.width}px`
+  div.style.height = `${height}px`
+  div.style.width = `${width}px`
 
   return div
 }

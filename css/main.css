@@ -55,20 +55,10 @@ canvas {
 	}
 }
 
-.tile-tool {
-	display: block;
-	background-image: url('../textures/01_130x66_130x230.png');
-	background-repeat: no-repeat;
-	background-size: auto;
-	width: 128px;
-	height: 230px;
-}
-
-.tool-section {
-	width: 100%;
-	margin: 0;
-	border: 0;
-	padding: 0;
+.section-header {
+	margin-inline-start: 4px;
+	margin-block-start: 4px;
+	margin-block-end: 4px;
 }
 
 .section-content {
@@ -79,6 +69,18 @@ canvas {
 	grid-gap: 5px;
 	grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
 }
+
+.tile-tool {
+	display: block;
+}
+
+.tool-section {
+	width: 100%;
+	margin: 0;
+	border: 0;
+	padding: 0;
+}
+
 
 @media only screen and (max-width: 966px) {
 

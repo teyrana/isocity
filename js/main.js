@@ -234,7 +234,7 @@ class Map {
 const textureFileData = [
   {
     offset: 0,
-    path: 'textures/roads.png',
+    path: 'textures/spritesheets/roads.png',
     tools: [0, 1, 3, 5, 7, 8, 9, 
             11, 13, 17, 
             21, 23, 27, 31, 
@@ -299,19 +299,7 @@ const textureFileData = [
     }
   }, {
     offset: 40,
-    path: 'textures/dividers.png',
-    tools: [1],
-    textures: {
-      divider: [
-        { i: 1, d: 'Low Wall: NE', h: 138, l: 4, r: 2, u: 130, v: 0 },
-        { i: 2, d: 'Low Wall: NW', h: 138, l: 1, r: 3, u: 260, v: 0 },
-        { i: 3, d: 'Low Wall: SW', h: 138, l: 2, r: 4, u: 390, v: 0 },
-        { i: 4, d: 'Low Wall: SE', h: 138, l: 3, r: 1, u: 520, v: 0 }
-      ]
-    }
-  }, {
-    offset: 50,
-    path: 'textures/water_features.png',
+    path: 'textures/spritesheets/waters.png',
     tools: [1, 2, 7, 8, 9],
     textures: {
       water: [
@@ -333,8 +321,8 @@ const textureFileData = [
       ]
     }
   }, {
-    offset: 65,
-    path: 'textures/buildings.png',
+    offset: 55,
+    path: 'textures/spritesheets/buildings.png',
     tools: [1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31, 33, 35, 37, 39],
     textures: {
       building: [

@@ -5,7 +5,7 @@ const textureFileData = [
   {
     offset: 0,
     path: 'textures/spritesheets/cityTiles_sheet.png',
-    tools: [0, 1, 2, 6, 8, 10, 12, 14, 16, 17],
+    tools: [0, 1, 2, 6, 8, 10, 12, 14, 16, 17, 18],
     textures: {
       // example: { // section-name
       //   { i: -1, // identifies this tile-texture // note: id numbers are _file-relative_
@@ -16,23 +16,22 @@ const textureFileData = [
       //     v: 460 // vertical texture coordinate
       //   }],
       basic: [
-	    { i: 0, d: 'Concrete', h: 100, u: 662, v: 202, w: 128 }
+        { i: 0, d: 'Concrete', h: 100, u: 662, v: 202, w: 128 }
       ],
-	  park: [
-	    { i: 1, d: 'Single-Tree-Contained', h: 115, l: 2, r: 2, u: 399, v: 1800},
-	    { i: 2, d: 'NW-Grass-Strip', h: 100, l: 5, r: 3, u: 792, v: 1471},
-	    { i: 3, d: 'NE-Grass-Strip', h: 100, l: 2, r: 4, u: 661, v: 1496},
-	    { i: 4, d: 'SE-Grass-Strip', h: 100, l: 3, r: 5, u: 795, v: 0},
-	    { i: 5, d: 'SW-Grass-Strip', h: 100, l: 4, r: 2, u: 399, v: 454},
-		{ i: 6, d: 'NW-SE-Grass-Strip', h: 101, l: 7, r: 7, u: 134, v: 1308},
-	    { i: 7, d: 'SW-NE-Grass-Strip', h: 100, l: 6, r: 6, u: 397, v: 1218},
+      park: [
+        { i: 1, d: 'Single-Tree-Contained', h: 115, l: 2, r: 2, u: 399, v: 1800},
+        { i: 2, d: 'NW-Grass-Strip', h: 100, l: 5, r: 3, u: 792, v: 1471},
+        { i: 3, d: 'NE-Grass-Strip', h: 100, l: 2, r: 4, u: 661, v: 1496},
+        { i: 4, d: 'SE-Grass-Strip', h: 100, l: 3, r: 5, u: 795, v: 0},
+        { i: 5, d: 'SW-Grass-Strip', h: 100, l: 4, r: 2, u: 399, v: 454},
+        { i: 6, d: 'NW-SE-Grass-Strip', h: 101, l: 7, r: 7, u: 134, v: 1308},
+        { i: 7, d: 'SW-NE-Grass-Strip', h: 100, l: 6, r: 6, u: 397, v: 1218},
         { i: 8, d: 'NW-SE-Grass-Tree-Strip', h: 112, l: 9, r: 9, u: 398, v: 1003},
-	    { i: 9, d: 'SW-NE-Grass-Tree-Strip', h: 112, l: 8, r: 8, u: 661, v: 1383},
-	  ],
-
+        { i: 9, d: 'SW-NE-Grass-Tree-Strip', h: 112, l: 8, r: 8, u: 661, v: 1383},
+      ],
       transport: [ // in no particular order:
-		// i:  0,   1,   2,   3,   4,   5,   6 
-		// u:  0, 132, 266, 397, 528, 662, 795
+        // i:  0,   1,   2,   3,   4,   5,   6 
+        // u:  0, 132, 266, 397, 528, 662, 795
         { i: 10, d: 'NW-SE-Wide-Road', h: 100, l: 11, r: 11, u: 662, v: 101, w: 128 },
         { i: 11, d: 'SW-NE-Wide-Road', h: 100, r: 10, l: 10, u: 528, v: 1923 },
         { i: 12, d: 'NW-SE Road-Crosswalk', h: 100, l: 13, r: 13, u: 795, v: 838 },
@@ -41,8 +40,13 @@ const textureFileData = [
         { i: 15, d: 'SW-NE-Tree-Road', h: 122, l: 14, r: 14, u: 529, v: 202 },
         { i: 16, d: '4-Way-Roundabout', h: 100, u: 399, v: 1116 },
         { i: 17, d: '4-Way-Road', h: 100, u: 266, v: 1511 },
- 
-		//{ i: 9, d: 'SW-NE Divided Road', h: 130, l: 10, r: 10, u: 1300, v: 0 },
+
+        { i: 18, d: 'Wide-Road-Corner-E', h: 101, l: 19, r: 21, u: 662, v: 867 },
+        { i: 19, d: 'Wide-Road-Corner-S', h: 99, l: 20, r: 18, u: 266, v: 1070 },
+        { i: 20, d: 'Wide-Road-Corner-W', h: 101, l: 21, r: 19, u: 266, v: 1270 },
+        { i: 21, d: 'Wide-Road-Corner-N', h: 101, l: 18, r: 20, u: 397, v: 1601 },
+        
+        //{ i: 9, d: 'SW-NE Divided Road', h: 130, l: 10, r: 10, u: 1300, v: 0 },
         //{ i: 10, d: 'NW-SE Divided Road', l: 130, r: 9, u: 1430, v: 0 },
 		
         // { i: 11, d: 'Large Lit Road: NW-SE', h: 130, l: 12, r: 12, u: 0, v: 142 },
@@ -69,12 +73,24 @@ const textureFileData = [
         // { i: 32, d: 'Level Tunnel Mouth: NE', h: 112, l: 33, r: 34, u: 1430, v: 272 },
         // { i: 33, d: 'Level Tunnel Mouth: SE', h: 103, l: 31, r: 32, u: 0, v: 382 },
         // { i: 34, d: 'Level Tunnel Mouth: NW', h: 103, l: 32, r: 31, u: 130, v: 382 },
-        // { i: 35, d: 'Wide Road: NE-SE', h: 103, l: 38, r: 37, u: 260, v: 382 },
-        // { i: 36, d: 'Wide Road: NW-SW', h: 103, l: 37, r: 38, u: 390, v: 382 },
-        // { i: 37, d: 'Wide Road: NW-NE', h: 103, l: 35, r: 36, u: 520, v: 382 },
-        // { i: 38, d: 'Wide Road: SW-SE', h: 103, l: 36, r: 35, u: 650, v: 382 }
       ]
     }
+  // }, {
+    // offset: 40,
+    // path: 'textures/spritesheets/landscapeTiles_sheet.png',
+    // tools: [1, 2, 7, 8, 9],
+    // textures: {
+      // water: [
+        // { i: 1, d: 'Basin: NE', h: 115, l: 4, r: 6, u: 130, v: 0 },
+        // { i: 2, d: 'Basin: SW/NE', h: 115, l: 5, r: 5, u: 260, v: 0 },
+        // { i: 3, d: 'Basin: SW', h: 115, l: 6, r: 4, u: 390, v: 0 },
+        // { i: 4, d: 'Basin: SE', h: 115, l: 3, r: 1, u: 520, v: 0 },
+        // { i: 5, d: 'Basin: NW/SE', h: 115, l: 2, r: 2, u: 650, v: 0 },
+        // { i: 6, d: 'Basin: NW', h: 115, l: 4, r: 3, u: 780, v: 0 },
+
+        // { i: 7, d: 'Solo Fountain', h: 120, l: 7, r: 7, u: 0, v: 114 },
+      // ]
+    // }
   }, {
     offset: 40,
     path: 'textures/spritesheets/waters.png',

@@ -84,19 +84,19 @@ const textureFileData = [ // eslint-disable-line no-unused-vars
   }, {
     offset: 50,
     path: 'textures/spritesheets/landscapeTiles_sheet.png',
-    tools: [1, 2, 3, 4, 5, 6, 10, 14, 18, 22, 26, 30, 34,   50, 52, 54, 62],
+    tools: [1, 2, 3, 4, 5, 6, 10, 14, 18, 22, 26, 30, 34, 36, 50, 52, 54, 58, 62],
     textures: {
       // column: i:  0,   1,   2,   3,   4,   5,   6
       // pixels: u:  0, 132, 266, 398, 529, 662, 795
       terrain: [
-        { i: 1, d: 'Lawn', h: 99, u: 397, v: 264 },
+        { i: 1, d: 'Lawn', h: 99, u: 398, v: 264 },
         { i: 2, d: 'Dirt-Thin-Slice', h: 84, u: 397, v: 1745 },
         { i: 3, d: 'Dirt-Thick-Slice', h: 100, u: 265, v: 723 },
         { i: 4, d: 'Green-Slice', h: 99, u: 397, v: 1548 },
         { i: 5, d: 'Sand', h: 99, u: 529, v: 1010 },
       ], water: [
-        { i: 6, d: 'Water', h: 85, u: 398, v: 363 },
-        { i: 10, d: 'NW-Beach', h: 100, l: 11, r: 13, u: 0, v: 1552 },
+        { i: 6, d: 'Water', h: 83, u: 398, v: 363 },
+        { i: 10, d: 'NW-Beach', h: 98, l: 11, r: 13, u: 0, v: 1552 },
         { i: 11, d: 'NE-Beach', h: 99, l: 12, r: 10, u: 1, v: 1948 },
         { i: 12, d: 'SE-Beach', h: 83, l: 13, r: 11, u: 662, v: 1270 },
         { i: 13, d: 'SW-Beach', h: 84, l: 10, r: 12, u: 134, v: 198 },
@@ -122,11 +122,11 @@ const textureFileData = [ // eslint-disable-line no-unused-vars
         { i: 33, d: 'W-Corner-Shore', h: 84, l: 30, r: 32, u: 794, v: 1402 },
         { i: 34, d: 'NW-SE-Stream', h: 96, l: 35, r: 35, u: 0, v: 1257 },
         { i: 35, d: 'SW-NE-Stream', h: 97, l: 34, r: 34, u: 0, v: 1058 },
-        
-        // { i: 38, d: 'S-Grass-Road-Curve', h: 98, l: 39, r: 41, u: 266, v: 266 },
-        // { i: 39, d: 'W-Grass-Road-Curve', h: 99, l: 40, r: 38, u: 399, v: 1158 },
-        // { i: 40, d: 'N-Grass-Road-Curve', h: 99, l: 41, r: 39, u: 266, v: 210 },
-        // { i: 41, d: 'E-Grass-Road-Curve', h: 98, l: 38, r: 40, u: 399, v: 1250 },
+        { i: 36, d: 'S-Stream-Curve', h: 99, l: 37, r: 39, u: 0, v: 1155 },
+        { i: 37, d: 'W-Stream-Curve', h: 99, l: 38, r: 36, u: 0, v: 181 },
+        { i: 38, d: 'N-Stream-Curve', h: 99, l: 39, r: 37, u: 0, v: 1650 },
+        { i: 39, d: 'E-Stream-Curve', h: 98, l: 36, r: 38, u: 133, v: 760 },
+
       ],
       ornament: [
       ],
@@ -137,17 +137,14 @@ const textureFileData = [ // eslint-disable-line no-unused-vars
         { i: 53, d: 'SW-NE-Grass-Median-Road', h: 99, l: 52, r: 52, u: 132, v: 561 },
         { i: 54, d: 'N-Grass-Road-Curve', h: 98, l: 55, r: 57, u: 265, v: 1139 },
         { i: 55, d: 'E-Grass-Road-Curve', h: 99, l: 56, r: 54, u: 397, v: 1265 },
-        { i: 56, d: 'S-Grass-Road-Curve', h: 99, l: 57, r: 55, u: 266, v: 197 },
+        { i: 56, d: 'S-Grass-Road-Curve', h: 98, l: 57, r: 55, u: 266, v: 197 },
         { i: 57, d: 'W-Grass-Road-Curve', h: 98, l: 54, r: 56, u: 397, v: 1365 },
-
-        // { i: 58, d: 'S-Grass-Road-Curve', h: 98, l: 39, r: 41, u: 266, v: 266 },
-        // { i: 59, d: 'W-Grass-Road-Curve', h: 99, l: 40, r: 38, u: 399, v: 1158 },
-        // { i: 60, d: 'N-Grass-Road-Curve', h: 99, l: 41, r: 39, u: 266, v: 210 },
-        // { i: 61, d: 'E-Grass-Road-Curve', h: 98, l: 38, r: 40, u: 399, v: 1250 },
-
-        // { i: 62, d: 'NW-SE-Grass-Stream-Bridge', h: 98, l: 63, r: 63, u: 662, v: 1800 },
-        // { i: 63, d: 'SW-NE-Grass-Stream-Bridge', h: 98, l: 62, r: 62, u: 662, v: 550 },
-
+        { i: 58, d: 'NW-Grass-Road-T-Section', h: 99, l: 61, r: 59, u: 529, v: 559, w: 133 },
+        { i: 59, d: 'NE-Grass-Road-T-Section', h: 99, l: 58, r: 60, u: 266, v: 623 },
+        { i: 60, d: 'SE-Grass-Road-T-Section', h: 99, l: 59, r: 61, u: 399, v: 545 },
+        { i: 61, d: 'SW-Grass-Road-T-Section', h: 98, l: 60, r: 58, u: 398, v: 645 },
+        { i: 62, d: 'NW-SE-Grass-Stream-Bridge', h: 98, l: 63, r: 63, u: 662, v: 1649 },
+        { i: 63, d: 'SW-NE-Grass-Stream-Bridge', h: 97, l: 62, r: 62, u: 663, v: 396 },
       ]
     }
   }, {

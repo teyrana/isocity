@@ -103,6 +103,9 @@ const drawMap = (canvas, map) => {
     for (let j = 0; j < map.dimension; j++) {
       const textureId = map.tiles[i][j]
       const texture = map.bank.tiles[textureId]
+      if( typeof texture === 'undefined') {
+        map.tiles[i][j] = 0
+      }
       drawTile(context, i, j, texture)
     }
   }

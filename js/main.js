@@ -305,7 +305,7 @@ class TextureBank {
             tex.id += chunkToLoad.offset
             tex.left += chunkToLoad.offset
             tex.right += chunkToLoad.offset
-            // console.log(`........ loading id: ${metadata.i} => as: ${tex.id}`)
+            //console.log(`........ loading id: ${metadata.i} => as: ${tex.id} (l: ${tex.left}, r: ${tex.right})`)
             this.tiles[tex.id] = tex
           })
         })

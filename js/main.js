@@ -433,5 +433,14 @@ const populateToolbar = (bank, interfaceLayer) => {
 
     /* global registerToolHeadings */
     registerToolHeadings()
+  }).then(_ => {
+    console.log('Collapsing Toolbars...')
+
+    document.querySelector('#terrain-section').querySelector('.section-content').style.display = 'none'
+    document.querySelector('#ornament-section').querySelector('.section-content').style.display = 'none'
+    document.querySelector('#transport-section').querySelector('.section-content').style.display = 'none'
+    // document.querySelector('#building-section').querySelector('.section-content').style.display = 'none'
+    document.querySelector('#water-section').querySelector('.section-content').style.display = 'none'
+    // document.querySelector('#???????-section').querySelector('.section-content').style.display = 'none'
   })
 })()

@@ -1,11 +1,9 @@
 'use strict'
 
-// not sure where this comes from...
-/* global history */
-
 // ====== ====== ====== ====== Rendering Functions ====== ====== ====== ======
 // ==================================================================
-
+/* global Tile */
+/* global history */
 const click = (interfaceLayer, map, event) => {
   const { i, j } = getTileIndex(interfaceLayer, event.offsetX, event.offsetY)
 
@@ -22,7 +20,7 @@ const click = (interfaceLayer, map, event) => {
   }
 
   const hash = map.save()
-  // map.load(document.location.hash.substring(1));
+
   history.replaceState(undefined, undefined, `#${hash}`)
 }
 
@@ -35,14 +33,14 @@ const onKeyDown = (interfaceLayer, bank, event) => {
     const newTexture = bank.tiles[oldTexture.left]
 
     interfaceLayer.activeToolId = newTexture.id
-    drawActiveTool(interfaceLayer, newTexture)
+    drawActiveTool(interfaceLayer, bank, newTexture.id)
   } else if (keyName === '2' || keyName === 'r' || keyName === 'RightArrow') {
     // rotate tool left
     const oldTexture = bank.tiles[interfaceLayer.activeToolId]
     const newTexture = bank.tiles[oldTexture.right]
 
     interfaceLayer.activeToolId = newTexture.id
-    drawActiveTool(interfaceLayer, newTexture)
+    drawActiveTool(interfaceLayer, bank, newTexture.id)
   }
 }
 
@@ -58,11 +56,11 @@ const getTileIndex = (canvas, x, y) => {
   // translate to map origin 0,0
   x = x - canvas.width / 2
   // yes, it's a magic number.  I dislike it, but I couldn't figure out another way...
-  y = y - TileTexture.MaxHeight + TileTexture.Base.height * 1.5
+  y = y - Tile.fullHeight + Tile.baseHeight * 1.5
 
   // scale differently, to match the skewed isometric perspective
-  x = x / TileTexture.Base.width
-  y = y / TileTexture.Base.height
+  x = x / Tile.width
+  y = y / Tile.baseHeight
 
   // the i-axis  goes from northeast to southwest
   const i = Math.floor(y - x)
@@ -73,24 +71,31 @@ const getTileIndex = (canvas, x, y) => {
   return { i, j }
 }
 
-const drawTile = (context, i, j, texture) => {
-  const { source } = texture // destructuring assignment
-  const { height, width } = source
-  const dest = {
-    u: (j - i) * TileTexture.Base.width / 2 - TileTexture.DefaultWidth / 2,
-    v: (i + j) * (TileTexture.Base.height) / 2 + (TileTexture.MaxHeight - height)
+const drawTile = (context, i, j, bank, textureStack) => {
+  const tile = {
+    u: (j - i) * Tile.width / 2 - Tile.width / 2,
+    v: (i + j) * Tile.baseHeight / 2
   }
 
-  // calculate draw coordinates for tile: i,j
-  // https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/drawImage
-  // void ctx.drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight)
-  context.drawImage(
-    source.image, source.u, source.v, width, height,
-    dest.u, dest.v, width, height
-  )
+  textureStack.forEach(textureEntry => {
+    const { image, height, u, v, width } = bank.textures[textureEntry.id]
+
+    const dest = {
+      u: tile.u + textureEntry.u,
+      v: tile.v + textureEntry.v
+    }
+
+    // calculate draw coordinates for tile: i,j
+    // https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/drawImage
+    // void ctx.drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight)
+    context.drawImage(
+      image, u, v, width, height,
+      dest.u, dest.v, width, height
+    )
+  })
 }
 
-const drawMap = (canvas, map) => {
+const drawMap = (map, bank, canvas) => {
   const context = canvas.getContext('2d')
 
   context.resetTransform()
@@ -99,47 +104,48 @@ const drawMap = (canvas, map) => {
 
   context.translate(canvas.width / 2, 0)
 
+  // console.log('>> Drawing map: ')
   for (let i = 0; i < map.dimension; i++) {
+    // console.log(`[${i}]  `, map.tiles[i].reduce((a, n) => a + ', ' + n.toString()))
     for (let j = 0; j < map.dimension; j++) {
-      const textureId = map.tiles[i][j]
-      const texture = map.bank.tiles[textureId]
-      if( typeof texture === 'undefined') {
+      const tileId = map.tiles[i][j]
+      const tile = bank.tiles[tileId]
+      if (typeof tile === 'undefined') {
         map.tiles[i][j] = 0
       }
-      drawTile(context, i, j, texture)
+      drawTile(context, i, j, bank, tile.textures)
     }
   }
 }
 
 /* global CanvasRenderingContext2D */
-const drawActiveTool = (context, texture) => {
+const drawActiveTool = (context, bank, toolId) => {
   if (!(context instanceof CanvasRenderingContext2D)) {
     const canvas = context
     context = canvas.getContext('2d')
 
     context.resetTransform()
-    context.clearRect(0, 0, canvas.width, canvas.height)
+    context.clearRect(0, 0, context.width, context.height)
   }
 
-  if (typeof texture === 'undefined' || texture === null) {
+  const tile = bank.tiles[toolId]
+
+  if (typeof tile === 'undefined' || tile === null) {
     // this is a common case, and happens on startup
     // don't worry... but don't try to draw anything :)
     return
   }
 
-  const { source: { image, height, u, v, width } } = texture
-  const maxHeight = TileTexture.MaxHeight
-
-  context.clearRect(0, 0, height, width)
-  context.translate(0, maxHeight - height)
-  context.drawImage(image, u, v, width, height, 0, 0, width, height)
+  context.clearRect(0, 0, Tile.width, Tile.fullHeight)
+  drawTile(context, -0.5, 0.5, bank, tile.textures)
 }
 
 const drawCursor = function (context, i, j) {
   // move to origin
-  context.translate(context.canvas.width / 2, TileTexture.MaxHeight - TileTexture.Base.height - 2)
+  context.translate(context.canvas.width / 2, Tile.fullHeight - Tile.baseHeight)
 
-  const { height, width } = TileTexture.Base
+  const height = Tile.baseHeight
+  const width = Tile.width
   context.translate((j - i) * width / 2, (i + j) * height / 2)
 
   context.beginPath()
@@ -152,7 +158,7 @@ const drawCursor = function (context, i, j) {
   context.fill()
 }
 
-const onMove = (cityLayer, interfaceLayer, map, event) => {
+const onMove = (cityLayer, interfaceLayer, bank, map, event) => {
   if (interfaceLayer.isPlacing) {
     const newEvent = {
       button: interfaceLayer.lastMouseButton,
@@ -160,7 +166,7 @@ const onMove = (cityLayer, interfaceLayer, map, event) => {
       offsetY: event.offsetY
     }
     click(interfaceLayer, map, newEvent)
-    drawMap(cityLayer, map)
+    drawMap(map, bank, cityLayer)
   }
 
   const { i, j } = getTileIndex(cityLayer, event.offsetX, event.offsetY)
@@ -173,26 +179,26 @@ const onMove = (cityLayer, interfaceLayer, map, event) => {
     context.resetTransform()
     context.clearRect(0, 0, interfaceLayer.width, interfaceLayer.height)
 
-    const texture = map.bank.tiles[interfaceLayer.activeToolId]
-    drawActiveTool(context, texture)
+    drawActiveTool(context, bank, interfaceLayer.activeToolId)
 
     context.resetTransform()
     drawCursor(context, i, j)
   }
 }
 
-// ====== ====== ====== ====== Map Module ====== ====== ====== ======
+// ====== ====== ====== Map Definition Code ====== ====== ====== ======
 // ==================================================================
 
 /* global atob */
 /* global btoa */
 class Map {
   constructor (n) {
+    this.textures = null
+    this.tiles = null
     this.dimension = n
     this.size = n * n
     this.tiles = Array(n).fill(Array(n).fill(0))
       .map(i => i.map(j => 0))
-    this.bank = null
   }
 
   // From https://stackoverflow.com/a/36046727
@@ -217,11 +223,8 @@ class Map {
   }
 
   load (state) {
-    if (!this.bank) {
-      return
-    }
-
     const u8 = Map._FromBase64(state)
+
     let c = 0
     for (let i = 0; i < this.dimension; i++) {
       for (let j = 0; j < this.dimension; j++) {
@@ -229,93 +232,6 @@ class Map {
         this.tiles[i][j] = id
       }
     }
-  }
-}
-
-// ====== ====== ====== Textures Module ====== ====== ====== ======
-// ================================================================
-class TileTexture {
-  constructor (image, meta) {
-    this.id = meta.i
-    this.description = meta.d
-    this.source = {
-      image,
-      height: meta.h || TileTexture.DefaultHeight,
-      u: meta.u || 0,
-      v: meta.v || 0,
-      width: meta.w || TileTexture.DefaultWidth
-    }
-    this.alt = meta.d
-    this.left = meta.l || meta.i
-    this.right = meta.r || meta.i
-    this.section = meta.section || 'Misc'
-  }
-}
-TileTexture.DefaultHeight = 230
-TileTexture.DefaultWidth = 130
-TileTexture.MaxHeight = 230
-TileTexture.Base = {
-  height: 66,
-  width: TileTexture.DefaultWidth
-}
-
-/* global Image */
-class TextureBank {
-  constructor () {
-    this.sources = []
-    this.tiles = []
-    this.tools = []
-  }
-
-  async loadTextures () {
-    console.log(`Loading ${textureFileData.length} texture files...`)
-
-    // actually a global imported from './textures.js' but actual 'import' statements throw errors
-    /* global textureFileData */
-    const filesToLoad = textureFileData.filter(f => {
-      if (f.path === null || typeof f.path === 'undefined') {
-        return false
-      }
-      return f
-    })
-
-    return Promise.all(filesToLoad.map(chunkToLoad => {
-      return new Promise((resolve, reject) => {
-        chunkToLoad.image = new Image()
-        chunkToLoad.image.onload = _ => resolve(chunkToLoad)
-        chunkToLoad.image.src = chunkToLoad.path
-      }).then(chunkToLoad => {
-        // if (event.target === null ||
-        //   typeof event.target.tools === 'undefined' ||
-        //   typeof event.target.textures === 'undefined') {
-        //   return
-        // }
-
-        chunkToLoad.offset = chunkToLoad.offset || 0
-
-        // console.log(`....Loading ${chunkToLoad.tools.length} tools from source: ${chunkToLoad.path}`)
-
-        // add this image to the list of possible
-        this.sources.push(chunkToLoad.image)
-
-        Object.entries(chunkToLoad.textures).forEach(sectionEntry => {
-          sectionEntry[1].forEach(metadata => {
-            metadata.section = sectionEntry[0]
-            const tex = new TileTexture(chunkToLoad.image, metadata)
-            tex.id += chunkToLoad.offset
-            tex.left += chunkToLoad.offset
-            tex.right += chunkToLoad.offset
-            //console.log(`........ loading id: ${metadata.i} => as: ${tex.id} (l: ${tex.left}, r: ${tex.right})`)
-            this.tiles[tex.id] = tex
-          })
-        })
-
-        chunkToLoad.tools.forEach(i => { this.tools.push(i + chunkToLoad.offset) })
-      }).catch(e => {
-        console.log('?? Unexpected error while loading textures')
-        console.log(e)
-      })
-    }))
   }
 }
 
@@ -353,13 +269,16 @@ const createToolDiv = (tex) => {
   const div = document.createElement('div')
   div.classList.add('tile-tool')
 
-  div.id = tex.description.toLowerCase().replace(/ /g, '-').replace(/[/:]/g, '')
+  // console.log(tex)
+  if (!tex) {
+    return div
+  }
 
-  div.style.backgroundImage = `url(${tex.source.image.src})`
+  div.style.backgroundImage = `url(${tex.image.src})`
   div.style.backgroundRepeat = 'no-repeat'
   div.style.backgroundSize = 'auto'
 
-  const { height, u, v, width } = tex.source
+  const { height, u, v, width } = tex
   div.style.backgroundPosition = `-${u}px -${v}px`
   div.style.height = `${height}px`
   div.style.width = `${width}px`
@@ -371,20 +290,21 @@ const populateToolbar = (bank, interfaceLayer) => {
   bank.tools.forEach(toolId => {
     // console.log(`... processing tool # '${toolId}'`)
 
-    const tool = bank.tiles[toolId]
-    if (!tool) {
+    const tile = bank.tiles[toolId]
+    if (!tile) {
       return
     }
+
     // console.log(`Creating Tool #${tool.id} for:'${tool.description}'  in: '${tool.section}'`)
     // const source = tool.source
     // console.log(`    @ [ ${source.u}, ${source.v}]  =>  [ ${source.width}, ${source.height}]`)
 
-    const container = getToolContainer(tool.section)
-    const div = createToolDiv(tool)
+    const container = getToolContainer(tile.section)
+    const div = createToolDiv(bank.textures[tile.textures[0].id])
 
-    div.addEventListener('click', e => {
-      interfaceLayer.activeToolId = tool.id
-      drawActiveTool(interfaceLayer, tool)
+    div.addEventListener('click', _ => {
+      interfaceLayer.activeToolId = tile.id
+      drawActiveTool(interfaceLayer, bank, tile.id)
     })
 
     container.appendChild(div)
@@ -393,17 +313,20 @@ const populateToolbar = (bank, interfaceLayer) => {
 
 // ====== ====== ====== ====== Main ====== ====== ====== ======
 // ============================================================
+
+// not sure where this comes from...
+/* global loadTextures */
+/* global loadTiles */
 (function init () {
   const map = new Map(8)
+  const bank = {}
 
   const cityLayer = document.querySelector('#bg')
   cityLayer.dimension = map.dimension
   // these dimensions are not _exact_ ... but should be a good heuristic :)
-  cityLayer.height = map.dimension * TileTexture.Base.height + TileTexture.MaxHeight
-  cityLayer.width = map.dimension * TileTexture.Base.width
+  cityLayer.height = map.dimension * Tile.baseHeight + (Tile.fullHeight - Tile.baseHeight)
+  cityLayer.width = map.dimension * Tile.width
   console.log(`>> Building canvas: ${cityLayer.width} x ${cityLayer.height}`)
-
-  const bank = new TextureBank()
 
   const interfaceLayer = document.querySelector('#fg')
   interfaceLayer.dimension = map.dimension
@@ -413,22 +336,28 @@ const populateToolbar = (bank, interfaceLayer) => {
   interfaceLayer.isPlacing = false
 
   interfaceLayer.addEventListener('contextmenu', e => e.preventDefault())
-  interfaceLayer.addEventListener('mousemove', e => onMove(cityLayer, interfaceLayer, map, e))
+  interfaceLayer.addEventListener('mousemove', e => onMove(cityLayer, interfaceLayer, bank, map, e))
 
   interfaceLayer.addEventListener('mouseup', e => unclick(e, interfaceLayer))
-  interfaceLayer.addEventListener('mousedown', e => { click(interfaceLayer, map, e); drawMap(cityLayer, map) })
+  interfaceLayer.addEventListener('mousedown', e => { click(interfaceLayer, map, e); drawMap(map, bank, cityLayer) })
 
   // document.addEventListener('keyup', null )
   document.addEventListener('keydown', e => onKeyDown(interfaceLayer, bank, e))
 
-  bank.loadTextures().then(_ => {
-    console.log('Finished Loading Textures:')
+  loadTextures(bank).then(_ => {
+    console.log('<< Finished Loading Textures:')
+    console.log('>> Loading Tiles:')
+    return loadTiles(bank)
+  }).then(_ => {
+    console.log('<< Finished Loading Tiles.')
+
+    console.log('==== Bank: ====')
     console.log(bank)
-    map.bank = bank
+
     map.load(document.location.hash.substring(1))
 
-    drawMap(cityLayer, map)
-
+    drawMap(map, bank, cityLayer)
+    drawActiveTool(interfaceLayer, bank, interfaceLayer.activeToolId)
     populateToolbar(bank, interfaceLayer)
 
     /* global registerToolHeadings */

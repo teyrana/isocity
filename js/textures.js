@@ -107,7 +107,7 @@ const textureDefinitions = [ // eslint-disable-line no-unused-vars
     path: 'textures/spritesheets/buildingTiles_sheet.png',
     textures: [
       // column:    0,   1,   2,   3,   4,   5,   6
-      // pixels(u): 0, 132, 266, 398, 529, 662, 795
+      // pixels(u): 0, 132, 266, 398, 529, 600, 795
       // row:       0,   1,   2,   3,   4,   5,   6,   7,    8,    9,   10,   11,   12,   13,   14,   15,
       // pixels(v)  0, 128,    , 382, 512, 639,                 1145,             1523, 1650, 1787, 1900
       //                    256                 768, 896, 1024,       1260, 1390,
@@ -122,12 +122,16 @@ const textureDefinitions = [ // eslint-disable-line no-unused-vars
       { i: 9, h: 127, u: 265, v: 1020 }, // GF-Brick-Round-Green-Awning-NE
       { i: 10, h: 126, u: 265, v: 0 }, // GF-Plain-Glass-Surround-SE
       { i: 11, h: 126, u: 132, v: 512 }, // GF-Plain-Glass-Surround-SW
-      // { i: 12, h: 126, u: 0, v: 924 }, // GF-Plain-Glass-Surround-NW
+      { i: 12, h: 85, u: 595, v: 1640 }, // NF-Plain-Glass-Surround
+
       // { i: 13, h: 126, u: 0, v: 1056 }, // GF-Plain-Glass-Surround-NE
+
       { i: 14, h: 125, u: 396, v: 1787 }, // GF-Plain-Gray-Round-Red-Awning-SE
       { i: 15, h: 124, u: 266, v: 128 }, // GF-Plain-Gray-Round-Red-Awning-SW
       { i: 16, h: 126, u: 132, v: 1148 }, // GF-Plain-Gray-Round-Red-Awning-NW
-      { i: 17, h: 126, u: 266, v: 382 } // GF-Plain-Gray-Round-Red-Awning-NE
+      { i: 17, h: 126, u: 266, v: 382 }, // GF-Plain-Gray-Round-Red-Awning-NE
+
+      { i: 20, h: 87, u: 596, v: 362 } // NF-Tan-Frame-Glass-Surround
     ]
   }
 ]

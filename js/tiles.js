@@ -107,7 +107,7 @@ const tileDefinitions = [ // eslint-disable-line no-unused-vars
     ]
   }, {
     offset: 200,
-    tools: [1, 5, 6, 10, 13],
+    tools: [1, 5, 6, 10, 12, 13, 20],
     section: 'buildings',
     tiles: [
       { i: 1, l: 2, r: 4, t: 201, v: 153 }, // GF-Red-Stripe-SE
@@ -122,12 +122,21 @@ const tileDefinitions = [ // eslint-disable-line no-unused-vars
 
       { i: 10, l: 11, r: 11, t: 210, v: 154 }, // GF-Plain-Glass-Surround-SE
       { i: 11, l: 10, r: 10, t: 211, v: 154 }, // GF-Plain-Glass-Surround-SW
-      // { i: 12, l: 10, r: 12 }, // GF-Plain-Glass-Surround-NE
+
+      { i: 12, t: [
+        {i: 210, v: 154},
+        {i: 212, u: 16, v: 120 },
+        {i: 212, u: 16, v: 88 },
+        {i: 212, u: 16, v: 55 }]
+      }, // 4F-Plain-Glass-Surround-SE
 
       { i: 13, l: 14, r: 16, t: 214, v: 155 }, // GF-Plain-Gray-Round-RedAwning-SE
       { i: 14, l: 15, r: 13, t: 215, v: 155 }, // GF-Plain-Gray-Round-RedAwning-SW
       { i: 15, l: 16, r: 14, t: 216, v: 154 }, // GF-Plain-Gray-Round-RedAwning-NW
-      { i: 16, l: 13, r: 15, t: 217, v: 154 } // GF-Plain-Gray-Round-RedAwning-NE
+      { i: 16, l: 13, r: 15, t: 217, v: 154 }, // GF-Plain-Gray-Round-RedAwning-NE
+
+      { i: 20, t: [{i: 212, u: 10, v: 44 }]}, // texture-validation
+
     ]
   }
 ]
@@ -139,12 +148,18 @@ class Tile {
   constructor (entry, section = 'Misc', offset = 0) {
     this.id = entry.i + offset
     this.textures = null
-    this.left = entry.l + offset || entry.i
-    this.right = entry.r + offset || entry.i
+    this.left = entry.l + offset || this.id
+    this.right = entry.r + offset || this.id
     this.section = section
 
     if (Array.isArray(entry.t)) {
-      this.textures = entry.t
+      this.textures = entry.t.map( t => {
+        return {
+          id: t.i,
+          u: t.u || 0,
+          v: t.v || 0,
+        }
+      })
     } else {
       // default values
       this.textures = [{ id: this.id, u: 0, v: Tile.defaultv }]
